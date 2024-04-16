@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Parent Page with Iframe</title>
+</head>
+<body>
+    <h2>Load external Page in iFrame and login with JS using a node.js proxy server:</h2>
+<iframe id="targetIframe" style="width:1000px; height:1000px;"></iframe>
+<script>
+
+    var NetworkStatus = require("@brightsign/networkstatus");
+    var networkStatus = new NetworkStatus();
+
+    networkStatus.getInterfaceStatus("eth0").then(
+        function(data) {
+            console.log("***General Interface Data***");
+            console.log(JSON.stringify(data));
+            console.log(data);
+            console.log("player IP Address: ",data.ipAddressList[0].address)
+            console.log("Access Proxy server - via:  http://" + data.ipAddressList[0].address + ":8000")
+        })
+    .catch(
+        function(data) {
+            console.log(JSON.stringify(data));
+    });
+
+    async function loadDataIntoIframe() {
+        try {
+
+            const response = await fetch('http://localhost:8000/proxy', {    
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                'url': 'https://practicetestautomation.com/practice-test-login/',
+
+            })
+            });
+            const data = await response.text();
+            const iframe = document.getElementById('targetIframe');
+            iframe.contentWindow.document.open();
+            iframe.contentWindow.document.write(data);
+            iframe.contentWindow.document.close();
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+
+
+    function pageLogin() {
+
+        var iframe = document.getElementById('targetIframe');
+        var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
+        var usernameField = innerDoc.querySelector('#username');
+        usernameField.value = 'student';
+
+        var passwordField = innerDoc.querySelector('#password');
+        passwordField.value = 'Password123';
+
+        setTimeout(function (){
+            console.log("Submit credentials");
+            var submitButton = innerDoc.querySelector('#submit');
+            submitButton.click();
+        }, 2000);		
+    }
+
+
+
+    setTimeout(()=>{
+        loadDataIntoIframe();
+        console.log("Loading Login page into iFrame...")
+    }, 2000 ) 
+
+
+
+    setTimeout(()=>{
+        pageLogin();
+        console.log("Start login steps...")
+    }, 10000 ) 
+</script>
+</body>
+</html>
